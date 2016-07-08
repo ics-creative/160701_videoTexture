@@ -20,6 +20,7 @@ package
 	import flash.events.VideoTextureEvent;
 	import flash.geom.Matrix3D;
 	import flash.media.Camera;
+	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
@@ -28,7 +29,7 @@ package
 	/**
 	 * @author Kentaro Kawakatsu
 	 */
-	public class Main extends Sprite
+	public final class Main extends Sprite
 	{
 		private var mode:uint = 0;
 		private var combo:ComboBox;
@@ -59,12 +60,13 @@ package
 				var tf:TextField = new TextField();
 				tf.autoSize = TextFieldAutoSize.LEFT;
 				addChild(tf);
-				tf.embedFonts = true;
-				var format:TextFormat = new TextFormat("PF Ronda Seven", 10, 0xFFFFFF);
+				const message:String = "VideoTexture is not supported on your PC.";
+				var format:TextFormat = new TextFormat("_sans", 14, 0x000000);
 				tf.defaultTextFormat = format;
-				tf.text = "VideoTexture is not supported on your PC.";
-				tf.x = (stage.stageWidth - tf.textWidth) >> 1;
-				tf.y = (stage.stageHeight - tf.textHeight) >> 1;
+				tf.text = message;
+				tf.x = (stage.stageWidth - tf.textWidth) / 2;
+				tf.y = (stage.stageHeight - tf.textHeight) / 2;
+				trace(message);
 				return;
 			}
 			stage3D = stage.stage3Ds[0];
@@ -178,54 +180,58 @@ package
 			var program:Program3D;
 			programList = new Vector.<Program3D>();
 			
-			var code:String = ""
+			var code:Array;
 			
 			// normal
-			code = "";
-			code += "mov ft0 v0\n";
-			code += "tex ft0, ft0, fs0<2d,clamp,linear>\n";
-			code += "mov oc, ft0\n";
-			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code);
+			code = [
+				"mov ft0 v0",
+				"tex ft0, ft0, fs0<2d,clamp,linear>",
+				"mov oc, ft0",
+			];
+			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code.join("\n"));
 			program = context3D.createProgram();
 			program.upload(vertexShader, fragmentShader);
 			programList[0] = program;
 			
 			// monochrome
-			code = "";
-			code += "mov ft0 v0\n";
-			code += "tex ft0, ft0, fs0<2d,clamp,linear>\n";
-			code += "add ft1.x, ft0.x, ft0.y\n";
-			code += "add ft1.x, ft1.x, ft0.z\n";
-			code += "div ft1.x, ft1.x, fc0.x\n";
-			code += "mov ft0.xyz, ft1.x\n";
-			code += "mov oc, ft0\n";
-			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code);
+			code = [
+				"mov ft0 v0",
+				"tex ft0, ft0, fs0<2d,clamp,linear>",
+				"add ft1.x, ft0.x, ft0.y",
+				"add ft1.x, ft1.x, ft0.z",
+				"div ft1.x, ft1.x, fc0.x",
+				"mov ft0.xyz, ft1.x",
+				"mov oc, ft0",
+			];
+			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code.join("\n"));
 			program = context3D.createProgram();
 			program.upload(vertexShader, fragmentShader);
 			programList[1] = program;
 			
 			// neg
-			code = "";
-			code += "mov ft0 v0\n";
-			code += "tex ft0, ft0, fs0<2d,clamp,linear>\n";
-			code += "sub ft0, fc0.x, ft0\n";
-			code += "mov oc, ft0\n";
-			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code);
+			code = [
+				"mov ft0 v0",
+				"tex ft0, ft0, fs0<2d,clamp,linear>",
+				"sub ft0, fc0.x, ft0",
+				"mov oc, ft0",
+			];
+			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code.join("\n"));
 			program = context3D.createProgram();
 			program.upload(vertexShader, fragmentShader);
 			programList[2] = program;
 			
 			// sepia
-			code = "";
-			code += "mov ft0 v0\n";
-			code += "tex ft0, ft0, fs0<2d,clamp,linear>\n";
-			code += "mul ft0.xyz, ft0.xyz, fc1\n";
-			code += "add ft1.x, ft0.x, ft0.y\n";
-			code += "add ft1.x, ft1.x, ft0.z\n";
-			code += "mov ft0.xyz, ft1.x\n";
-			code += "mul ft0.xyz, ft0.xyz, fc0\n";
-			code += "mov oc, ft0\n";
-			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code);
+			code = [
+				"mov ft0 v0",
+				"tex ft0, ft0, fs0<2d,clamp,linear>",
+				"mul ft0.xyz, ft0.xyz, fc1",
+				"add ft1.x, ft0.x, ft0.y",
+				"add ft1.x, ft1.x, ft0.z",
+				"mov ft0.xyz, ft1.x",
+				"mul ft0.xyz, ft0.xyz, fc0",
+				"mov oc, ft0",
+			];
+			fragmentShader = agalAssembler.assemble(Context3DProgramType.FRAGMENT, code.join("\n"));
 			program = context3D.createProgram();
 			program.upload(vertexShader, fragmentShader);
 			programList[3] = program;
